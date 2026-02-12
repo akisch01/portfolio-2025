@@ -1,0 +1,11 @@
+--2025-11-19 22:05:49--  https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-1.2.1
+Résolution de images.unsplash.com (images.unsplash.com)… 2a04:4e42:1d::720, 199.232.170.208
+Connexion à images.unsplash.com (images.unsplash.com)|2a04:4e42:1d::720|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 1440109 (1,4M) [image/jpeg]
+Enregistre : ‘public/images/default/cert-placeholder.jpg’
+
+      public   0%       0  --.-KB/s                    public/   9% 134,72K   672KB/s                   public/i  12% 182,72K   445KB/s                  public/im  27% 390,72K   618KB/s                 public/ima  47% 662,72K   787KB/s                public/imag  81%   1,12M  1,06MB/s               public/image 100%   1,37M  1,20MB/s    ds 1,1s    
+
+2025-11-19 22:05:50 (1,20 MB/s) - ‘public/images/default/cert-placeholder.jpg’ enregistré [1440109/1440109]
+
