@@ -1,9 +1,9 @@
 'use client';
 
-import { motion, useAnimationControls } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 import Image from 'next/image';
-import { Download, ExternalLink, X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import { PORTFOLIO_DATA } from '@/data/portfolio';
 
 interface CertificationsProps {
@@ -11,32 +11,71 @@ interface CertificationsProps {
 }
 
 export default function Certifications({ language }: CertificationsProps) {
-  const certifications = PORTFOLIO_DATA.certifications;
-  const [selectedCert, setSelectedCert] = useState<any | null>(null);
+  const sortedCertifications = [...PORTFOLIO_DATA.certifications].sort((a, b) => 
+    a.name.localeCompare(b.name)
+  );
   
-  // Split into rows
-  const row1 = certifications.filter(c => c.category === 'dev');
-  const row2 = certifications.filter(c => c.category !== 'dev');
+  const [selectedCert, setSelectedCert] = useState<any | null>(null);
+  const [filter, setFilter] = useState<'all' | 'dev' | 'data'>('all');
+  
+  const filteredCerts = sortedCertifications.filter(c => filter === 'all' || c.category === filter);
+  
+  let row1: any[] = [];
+  let row2: any[] = [];
+
+  if (filter === 'all') {
+    // When showing all, distribute evenly instead of splitting by category
+    const midPoint = Math.ceil(filteredCerts.length / 2);
+    row1 = filteredCerts.slice(0, midPoint);
+    row2 = filteredCerts.slice(midPoint);
+  } else {
+    // When filtering, split the filtered results in half
+    const midPoint = Math.ceil(filteredCerts.length / 2);
+    row1 = filteredCerts.slice(0, midPoint);
+    row2 = filteredCerts.slice(midPoint);
+  }
 
   return (
     <section id="certifications" className="py-16 md:py-32 relative overflow-hidden">
-      <div className="container px-4 md:px-6 mb-16">
+      <div className="container px-4 md:px-6 mb-12">
         <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-center mb-6">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">
             CERTIFICATIONS
           </span>
         </h2>
-        <p className="text-center text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-10">
           {language === 'fr' 
             ? "Une validation continue de mes compétences techniques à travers les standards de l'industrie."
             : "Continuous validation of my technical skills through industry standards."}
         </p>
+        
+        {/* Filter Buttons */}
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${filter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-card border border-white/10 hover:border-primary/50 text-muted-foreground hover:text-foreground'}`}
+          >
+            {language === 'fr' ? 'Toutes' : 'All'}
+          </button>
+          <button
+            onClick={() => setFilter('dev')}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${filter === 'dev' ? 'bg-primary text-primary-foreground' : 'bg-card border border-white/10 hover:border-primary/50 text-muted-foreground hover:text-foreground'}`}
+          >
+            Dev
+          </button>
+          <button
+            onClick={() => setFilter('data')}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${filter === 'data' ? 'bg-primary text-primary-foreground' : 'bg-card border border-white/10 hover:border-primary/50 text-muted-foreground hover:text-foreground'}`}
+          >
+            Data
+          </button>
+        </div>
       </div>
 
       {/* Marquee Container */}
-      <div className="space-y-8 relative z-10">
-        <MarqueeRow items={row1} direction="left" onSelect={setSelectedCert} />
-        <MarqueeRow items={row2} direction="right" onSelect={setSelectedCert} />
+      <div className="space-y-8 relative z-10" key={filter}>
+        {row1.length > 0 && <MarqueeRow items={row1} direction="left" onSelect={setSelectedCert} />}
+        {row2.length > 0 && <MarqueeRow items={row2} direction="right" onSelect={setSelectedCert} />}
       </div>
 
       {/* Lightbox */}
@@ -96,8 +135,16 @@ export default function Certifications({ language }: CertificationsProps) {
 }
 
 const MarqueeRow = ({ items, direction, onSelect }: { items: any[], direction: 'left' | 'right', onSelect: (c: any) => void }) => {
-  // We duplicate items to create a seamless loop
-  const marqueeItems = [...items, ...items, ...items];
+  if (items.length === 0) return null;
+
+  // We need the items array to be long enough so that HALF of the duplicate fills the screen.
+  let baseItems = [...items];
+  while (baseItems.length < 8) {
+    baseItems = [...baseItems, ...items];
+  }
+
+  // Duplicate exactly once for a seamless 50% translation loop
+  const marqueeItems = [...baseItems, ...baseItems];
 
   return (
     <div className="relative flex overflow-hidden group">
@@ -105,7 +152,7 @@ const MarqueeRow = ({ items, direction, onSelect }: { items: any[], direction: '
         initial={{ x: direction === 'left' ? 0 : '-50%' }}
         animate={{ x: direction === 'left' ? '-50%' : 0 }}
         transition={{ 
-          duration: 50, 
+          duration: Math.max(30, baseItems.length * 4), 
           ease: "linear", 
           repeat: Infinity 
         }}
@@ -113,7 +160,7 @@ const MarqueeRow = ({ items, direction, onSelect }: { items: any[], direction: '
       >
         {marqueeItems.map((cert, idx) => (
           <div 
-            key={idx}
+            key={`${cert.name}-${idx}`}
             onClick={() => onSelect(cert)}
             className="relative w-72 md:w-80 aspect-[4/3] flex-shrink-0 rounded-xl overflow-hidden border border-white/10 bg-card cursor-pointer hover:border-primary transition-colors"
           >

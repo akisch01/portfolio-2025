@@ -50,7 +50,7 @@ export const PORTFOLIO_DATA = {
     {
       title: 'Développeur Full Stack',
       titleEn: 'Full Stack Developer',
-      company: 'Codeurs Pro (CDI)',
+      company: 'Codeurs Pro (Freelance)',
       period: "Janv. 2023 - Aujourd'hui",
       periodEn: 'Jan. 2023 - Today',
       location: 'Lomé',
@@ -92,7 +92,21 @@ export const PORTFOLIO_DATA = {
   ],
   projects: [
     {
+      title: 'ATS Intelligent (SaaS)',
+      category: ['dev', 'data'],
+      role: 'Full-Stack & Data Engineer',
+      descFr: "Conception d'un outil SaaS de suivi de candidatures (Next.js, Prisma, SQL). Intégration de l'API OpenAI pour l'analyse de compatibilité CV/offre et dashboard automatisé, réduisant de 40% le temps de screening.",
+      descEn: 'SaaS applicant tracking tool (Next.js, Prisma, SQL). OpenAI API integration for CV/job compatibility analysis and automated dashboard, reducing screening time by 40%.',
+      stack: ['Next.js', 'Prisma', 'Tailwind CSS', 'OpenAI', 'SQL'],
+      image: '/projettof/suivie-de-candidature.png',
+      links: [
+        { label: 'Site en ligne', url: 'https://suivie.devops-office.com/', icon: 'ExternalLink' }
+      ],
+      gradient: 'from-blue-600 via-indigo-600 to-violet-600'
+    },
+    {
       title: 'Gestion Cantines Universitaires',
+      category: 'dev',
       role: 'Full-Stack & Architecte',
       descFr: 'Modernisation de la gestion des repas sur campus : menus, réservations et notations. Application complète avec logique métier complexe.',
       descEn: 'Modernization of campus meal management: menus, reservations and ratings. Complete application with complex business logic.',
@@ -107,6 +121,7 @@ export const PORTFOLIO_DATA = {
     },
     {
       title: 'Monitoring Système & Alerte',
+      category: 'dev',
       role: 'Ingénieur Système',
       descFr: 'Agent de surveillance (Daemon) interagissant avec le noyau Linux (/proc). Alerte mail automatique via Postfix et Dashboard temps réel.',
       descEn: 'Monitoring agent (Daemon) interacting with Linux kernel (/proc). Automatic email alerts via Postfix and real-time Dashboard.',
@@ -120,6 +135,7 @@ export const PORTFOLIO_DATA = {
     },
     {
       title: 'Banque Delta (Core Banking)',
+      category: 'dev',
       role: 'Backend Developer (API)',
       descFr: "Système de gestion bancaire robuste : comptes courants/épargne, calcul d'intérêts et gestion de découvert transactionnel.",
       descEn: 'Robust banking management system: current/savings accounts, interest calculation and overdraft management.',
@@ -133,6 +149,7 @@ export const PORTFOLIO_DATA = {
     },
     {
       title: 'Plateforme Miss UCAO 2025',
+      category: 'dev',
       role: 'Frontend Developer',
       descFr: "Plateforme événementielle officielle pour l'élection Miss UCAO. Architecture découplée pour la sécurité et la performance.",
       descEn: 'Official event platform for Miss UCAO election. Decoupled architecture for security and performance.',
@@ -146,6 +163,7 @@ export const PORTFOLIO_DATA = {
     },
     {
       title: 'Analyse des Ventes (Data Eng)',
+      category: 'data',
       role: 'Data Engineer',
       descFr: "Pipeline d'analyse de données : Extraction SQL, nettoyage Pandas/NumPy et visualisation des KPIs stratégiques.",
       descEn: 'Data analysis pipeline: SQL extraction, Pandas/NumPy cleaning and strategic KPI visualization.',
@@ -159,6 +177,7 @@ export const PORTFOLIO_DATA = {
     },
     {
       title: 'Business Intelligence Dashboard',
+      category: 'data',
       role: 'BI Consultant',
       descFr: "Modélisation de données d'entreprise et création de mesures DAX avancées pour un tableau de bord décisionnel interactif.",
       descEn: 'Enterprise data modeling and advanced DAX measures for interactive decision dashboard.',

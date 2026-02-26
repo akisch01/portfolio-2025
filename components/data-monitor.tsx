@@ -11,7 +11,7 @@ interface GitHubData {
     date: string;
     url: string;
   } | null;
-  languages: { name: string; count: number; percent: number }[];
+  languages: { name: string; percent: number }[];
   totalRepos: number;
   avatar: string;
 }
@@ -50,7 +50,7 @@ export default function DataMonitor() {
   // Real ETL Logic: Fetch GitHub Data
   useEffect(() => {
     async function fetchGitHubData() {
-      const CACHE_KEY = 'github_telemetry_v1';
+      const CACHE_KEY = 'github_telemetry_v6';
       const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
       // 1. Check Cache
@@ -69,43 +69,69 @@ export default function DataMonitor() {
         
         // 2. Extract: Fetch Repos & Events in parallel
         const [reposRes, eventsRes, userRes] = await Promise.all([
-          fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=20`),
+          fetch(`https://api.github.com/users/${username}/repos?type=all&sort=updated&per_page=100`),
           fetch(`https://api.github.com/users/${username}/events/public?per_page=10`),
           fetch(`https://api.github.com/users/${username}`)
         ]);
+
+        if (!reposRes.ok || !eventsRes.ok || !userRes.ok) {
+          throw new Error('GitHub API Error: Rate limit or invalid response');
+        }
 
         const repos = await reposRes.json();
         const events = await eventsRes.json();
         const user = await userRes.json();
 
-        // 3. Transform: Process Languages
-        const langCount: Record<string, number> = {};
-        let totalProcessed = 0;
+        // 3. Transform: Process Languages (Weighted by Repository Size)
+        const langBytes: Record<string, number> = {};
+        let totalBytes = 0;
         
         if (Array.isArray(repos)) {
           repos.forEach((repo: any) => {
-            if (repo.language) {
-              langCount[repo.language] = (langCount[repo.language] || 0) + 1;
-              totalProcessed++;
+            if (repo.language && !['HTML', 'CSS', 'Jupyter Notebook', 'Hack'].includes(repo.language)) {
+              // Use repo.size (in KB) as an approximation of language volume
+              langBytes[repo.language] = (langBytes[repo.language] || 0) + repo.size;
+              totalBytes += repo.size;
             }
           });
         }
 
-        const languages = Object.entries(langCount)
-          .map(([name, count]) => ({ name, count, percent: Math.round((count / totalProcessed) * 100) }))
-          .sort((a, b) => b.count - a.count)
+        const languages = Object.entries(langBytes)
+          .map(([name, bytes]) => ({ name, percent: Math.round((bytes / totalBytes) * 100) }))
+          .sort((a, b) => b.percent - a.percent || a.name.localeCompare(b.name))
           .slice(0, 4); // Top 4 languages
 
-        // 4. Transform: Get Last Commit
+        // 4. Transform: Get Last Commit from the most recently updated repo
         let lastCommit = null;
-        if (Array.isArray(events)) {
-          const pushEvent = events.find((e: any) => e.type === 'PushEvent');
-          if (pushEvent) {
+        if (Array.isArray(repos) && repos.length > 0) {
+          // Repos are already sorted by updated_at descending
+          const mostRecentRepo = repos[0];
+          
+          try {
+            // Fetch the actual commits for this repo to get the real message
+            const commitsRes = await fetch(`https://api.github.com/repos/${mostRecentRepo.full_name}/commits?per_page=1`);
+            if (commitsRes.ok) {
+              const commits = await commitsRes.json();
+              if (Array.isArray(commits) && commits.length > 0) {
+                lastCommit = {
+                  message: commits[0].commit.message.split('\n')[0], // Get first line of commit message
+                  repo: mostRecentRepo.name,
+                  date: new Date(commits[0].commit.author.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(commits[0].commit.author.date).toLocaleDateString(),
+                  url: commits[0].html_url
+                };
+              }
+            }
+          } catch (e) {
+            console.error("Failed to fetch commit details", e);
+          }
+          
+          // Fallback if commit fetch fails but we know the repo updated
+          if (!lastCommit) {
             lastCommit = {
-              message: pushEvent.payload.commits[0]?.message || 'Update',
-              repo: pushEvent.repo.name.split('/')[1],
-              date: new Date(pushEvent.created_at).toLocaleTimeString(),
-              url: `https://github.com/${pushEvent.repo.name}`
+               message: 'Recent update (details unavailable)',
+               repo: mostRecentRepo.name,
+               date: new Date(mostRecentRepo.updated_at).toLocaleDateString(),
+               url: mostRecentRepo.html_url
             };
           }
         }
@@ -113,7 +139,7 @@ export default function DataMonitor() {
         const finalData = {
           lastCommit,
           languages,
-          totalRepos: user.public_repos || 0,
+          totalRepos: Array.isArray(repos) ? repos.length : (user.public_repos || 0),
           avatar: user.avatar_url
         };
 
@@ -127,10 +153,10 @@ export default function DataMonitor() {
         setData({
           lastCommit: { message: "System Optimization", repo: "Portfolio_2025", date: "Now", url: "#" },
           languages: [
-            { name: "Python", count: 10, percent: 45 },
-            { name: "TypeScript", count: 5, percent: 30 },
-            { name: "Java", count: 3, percent: 15 },
-            { name: "SQL", count: 2, percent: 10 }
+            { name: "Python", percent: 45 },
+            { name: "TypeScript", percent: 30 },
+            { name: "Java", percent: 15 },
+            { name: "SQL", percent: 10 }
           ],
           totalRepos: 25,
           avatar: ""

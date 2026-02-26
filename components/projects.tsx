@@ -4,13 +4,23 @@ import { motion } from 'framer-motion';
 import { ExternalLink, Github, Code2, ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
 import { PORTFOLIO_DATA } from '@/data/portfolio';
+import { useState } from 'react';
 
 interface ProjectsProps {
   language: 'fr' | 'en';
 }
 
 export default function Projects({ language }: ProjectsProps) {
-  const projects = PORTFOLIO_DATA.projects;
+  const [filter, setFilter] = useState<'all' | 'dev' | 'data'>('all');
+  const allProjects = PORTFOLIO_DATA.projects;
+  const projects = allProjects.filter(p => {
+    if (filter === 'all') return true;
+    if (Array.isArray(p.category)) {
+      return p.category.includes(filter);
+    }
+    return p.category === filter;
+  });
+  
   const title = language === 'fr' ? 'PROJETS RÉCENTS' : 'RECENT WORK';
   const subtitle = language === 'fr' 
     ? 'Une sélection de mes travaux techniques et créatifs' 
@@ -37,7 +47,7 @@ export default function Projects({ language }: ProjectsProps) {
       <div className="container px-4 md:px-6">
         
         {/* Section Header */}
-        <div className="mb-16 md:mb-24 space-y-4">
+        <div className="mb-12 md:mb-16 space-y-4">
           <motion.h2 
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -59,21 +69,43 @@ export default function Projects({ language }: ProjectsProps) {
           </motion.p>
         </div>
 
+        {/* Filter Buttons */}
+        <div className="flex gap-4 mb-12 overflow-x-auto pb-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${filter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-card border border-white/10 hover:border-primary/50 text-muted-foreground hover:text-foreground'}`}
+          >
+            {language === 'fr' ? 'Tous les projets' : 'All Projects'}
+          </button>
+          <button
+            onClick={() => setFilter('dev')}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${filter === 'dev' ? 'bg-primary text-primary-foreground' : 'bg-card border border-white/10 hover:border-primary/50 text-muted-foreground hover:text-foreground'}`}
+          >
+            {language === 'fr' ? 'Développement' : 'Development'}
+          </button>
+          <button
+            onClick={() => setFilter('data')}
+            className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${filter === 'data' ? 'bg-primary text-primary-foreground' : 'bg-card border border-white/10 hover:border-primary/50 text-muted-foreground hover:text-foreground'}`}
+          >
+            Data Engineering
+          </button>
+        </div>
+
         {/* Bento Grid */}
         <motion.div 
+          key={filter} // Force re-render animation when filter changes
           variants={container}
           initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
+          animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {projects.map((project, idx) => {
-            // Make some cards span 2 columns for visual variety (every 3rd and 4th item roughly)
-            const isLarge = idx === 0 || idx === 3;
+            // Adjust spans based on number of items to make it look nice
+            const isLarge = projects.length > 2 && (idx === 0 || idx === 3);
             
             return (
               <motion.div
-                key={idx}
+                key={project.title}
                 variants={item}
                 className={`group relative rounded-3xl overflow-hidden border border-white/10 bg-card hover:border-primary/50 transition-colors duration-500 ${isLarge ? 'md:col-span-2' : 'md:col-span-1'}`}
               >
